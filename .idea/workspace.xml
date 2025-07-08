@@ -6,12 +6,18 @@
   <component name="ChangeListManager">
     <list default="true" id="27846da3-7b97-4be0-aef8-3124700ba2e5" name="Changes" comment="ohlcv fetch asyncio added with delays - to be removed">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -52,6 +58,12 @@
     &quot;last_opened_file_path&quot;: &quot;/Users/alessandrofusco/PycharmProjects/crypto-trader&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/backtest/candle_backtester" />
+      <recent name="$PROJECT_DIR$/strategies/mean_reversion" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
