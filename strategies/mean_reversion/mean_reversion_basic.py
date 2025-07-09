@@ -5,14 +5,26 @@ import feature_engineering.feature_functions as ffs
 class MeanReversionBasic(Strategy):
     def __init__(self, params: dict):
         super().__init__(params)
-        self.prices = CircularBuffer(self.params['window'])
+        self.params['required_features'] = {'zscore':[]}
 
-    def update_state(self, price, position=None):
+        window = self.params.get('window')
+        if not window:
+            window = 20
+            self.params['window'] = window
+        self.prices = CircularBuffer(size=window)
+
+    def update_state(self, candle, position=None):
+        price = candle[self.params['price_column']]
+        precomputed = self.params['use_precomputed_features']
+
         self.prices.append(price)
-        self.state['zscore'] = ffs.compute_newest_zscore(self.params['window'], self.prices.to_array())
+        if precomputed:
+            self.state['zscore'] = candle['zscore']
+        else:
+            self.state['zscore'] = ffs.zscore(self.prices.to_array())
 
-        valid_positions = {'long', 'short', 'hold'}
-        if position:
+        if not position is None:
+            valid_positions = {'long', 'short', 'hold'}
             if position in valid_positions:
                 self.state['position'] = position
             else:
