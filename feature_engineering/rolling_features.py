@@ -1,22 +1,19 @@
 import pandas as pd
-import numpy as np
-import ta.momentum, ta.trend, ta.volatility, ta.volume
+import feature_engineering.rolling_feature_functions as rffs
 
-def add_rolling_features(df, window=20):
+ROLLING_FEATURE_FUNCTIONS = {
+    'zscore':lambda df, price_col, window: rffs.zscore_rolling(df, price_col, window)
+}
+
+def add_rolling_features(df, required_features=None):
     df = df.copy()
 
-    df['rsi'] = ta.momentum.RSIIndicator(close=df['close'], window=window).rsi()
-    df['stoch'] = ta.momentum.StochasticOscillator(high=df['high'], low=df['low'], close=df['close'], window=window).stoch()
-
-    df['sma_20'] = ta.trend.SMAIndicator(close=df['close'], window=20).sma_indicator()
-    df['ema_20'] = ta.trend.EMAIndicator(close=df['close'], window=20).ema_indicator()
-    df['macd'] = ta.trend.MACD(close=df['close']).macd_diff()
-
-    df['atr'] = ta.volatility.AverageTrueRange(high=df['high'], low=df['low'], close=df['close']).average_true_range()
-    df['bollinger_high'] = ta.volatility.BollingerBands(close=df['close']).bollinger_hband()
-    df['bollinger_low'] = ta.volatility.BollingerBands(close=df['close']).bollinger_lband()
-
-    df['obv'] = ta.volume.OnBalanceVolumeIndicator(close=df['close'], volume=df['volume']).on_balance_volume()
+    if not required_features is None:
+        for feature in required_features:
+            if feature in ROLLING_FEATURE_FUNCTIONS:
+                df[feature] = ROLLING_FEATURE_FUNCTIONS[feature](**required_features)
+            else:
+                raise ValueError('unknown feature')
 
     df = df.dropna()
     return df

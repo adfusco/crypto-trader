@@ -1,11 +1,8 @@
 import pandas as pd
 import numpy as np
 
-def compute_newest_zscore(window, series):
-    if len(series) < window:
-        pass
-
-    s = pd.Series(series[-window:])
+def zscore(window_arr):
+    s = pd.Series(window_arr)
     mean = s.mean()
     std = s.std()
 
