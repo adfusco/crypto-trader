@@ -3,23 +3,31 @@ from backtest.utils.circular_buffer import CircularBuffer
 import feature_engineering.feature_functions as ffs
 
 class MeanReversionBasic(Strategy):
+    @staticmethod
+    def required_params():
+        return ['use_precomputed_features', 'window', 'price_col', 'zscores']
+
+    @classmethod
+    def default_params(cls):
+        return {
+            'use_precomputed_features':True,
+            'window':20,
+            'price_col':'close',
+            'zscores':{'entry_long':-1, 'exit_long':-1, 'entry_short':1, 'exit_short':1}
+        }
+
     def __init__(self, params: dict):
         super().__init__(params)
-        self.params['required_features'] = {'zscore':[]}
+        self.required_features = {'zscore': [self.params['candle_df'], self.params['price_col'], self.params['window']]}
+        self.prices = CircularBuffer(size=self.params['window'])
 
-        window = self.params.get('window')
-        if not window:
-            window = 20
-            self.params['window'] = window
-        self.prices = CircularBuffer(size=window)
-
-    def update_state(self, candle, position=None):
-        price = candle[self.params['price_column']]
-        precomputed = self.params['use_precomputed_features']
-
+    def update_state(self, candle_row, position=None):
+        price = candle_row[self.params['price_column']]
         self.prices.append(price)
+
+        precomputed = self.params['use_precomputed_features']
         if precomputed:
-            self.state['zscore'] = candle['zscore']
+            self.state['zscore'] = candle_row['zscore']
         else:
             self.state['zscore'] = ffs.zscore(self.prices.to_array())
 
@@ -34,10 +42,10 @@ class MeanReversionBasic(Strategy):
         pos = self.state.get('position')
         z = self.state['zscore']
 
-        z_long_entry = self.state['long_entry_zscore']
-        z_long_exit = self.state['long_exit_zscore']
-        z_short_entry = self.state['short_entry_zscore']
-        z_short_exit = self.state['short_exit_zscore']
+        z_long_entry = self.params['zscores']['long_entry']
+        z_long_exit = self.params['zscores']['long_exit']
+        z_short_entry = self.params['zscores']['short_entry']
+        z_short_exit = self.params['zscores']['short_exit']
 
         long_entry = z < z_long_entry
         long_exit = z > z_long_exit
@@ -63,8 +71,6 @@ class MeanReversionBasic(Strategy):
         return {
             'side':signal['side'],
             'order_type':signal['order_type'],
-            'asset':self.state['asset'],
-            'quantity':self.state['qty']
         }
 
     def reset(self):

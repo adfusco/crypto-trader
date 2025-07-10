@@ -1,6 +1,14 @@
 class Strategy:
+    @staticmethod
+    def required_params():
+        return []
+
+    @classmethod
+    def default_params(cls):
+        return {}
+
     def __init__(self, params: dict):
-        self.params = params
+        self.params = {**self.default_params(), **params}
         self.state = {}
 
     def update_state(self, market_candle):
