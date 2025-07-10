@@ -11,7 +11,7 @@ def add_rolling_features(df, required_features=None):
     if not required_features is None:
         for feature in required_features:
             if feature in ROLLING_FEATURE_FUNCTIONS:
-                df[feature] = ROLLING_FEATURE_FUNCTIONS[feature](**required_features)
+                df[feature] = ROLLING_FEATURE_FUNCTIONS[feature](df, **required_features)
             else:
                 raise ValueError('unknown feature')
 
