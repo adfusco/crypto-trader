@@ -1,15 +1,23 @@
-from backtest.candle_backtester.candle_executor import execute_order
-from feature_engineering.rolling_features import add_rolling_features
+class Backtester:
+    def __init__(self, strategy, executor, simulator, portfolio, logger, candle_df,):
+        self.strategy = strategy
+        self.executor = executor
+        self.simulator = simulator
+        self.portfolio = portfolio
+        self.logger = logger
+        self.data = candle_df
 
-def run_backtest(strategy, candle_df, portfolio, logger, start_index=0, end_index=None):
-    if end_index is None: end_index = len(candle_df)
-    candle_df = candle_df[(candle_df['timestamp'] >= start_index) & (candle_df['timestamp'] <= end_index)].copy()
+    def run_backtest(self, start_index=0, end_index=None):
+        if end_index is None: end_index = len(self.data)
+        self.data = self.data[(self.data['timestamp'] >= start_index) & (self.data['timestamp'] <= end_index)].copy()
 
-    for i in range(0, len(candle_df)):
-        row = candle_df.iloc[i]
+        for i in range(0, len(self.data)):
+            row = self.data.iloc[i]
 
-        strategy.update_state(row)
-        signal = strategy.gen_signal()
-        order_request = strategy.gen_order(signal)
+            self.portfolio.mark_to_market(row)
 
-        order_obj = execute_order(order_request)
+            self.strategy.update_state(row)
+            signal = self.strategy.gen_signal()
+            order_request = self.strategy.gen_order(signal)
+
+            self.executor.execute_order(order_request)

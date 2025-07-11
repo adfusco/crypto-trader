@@ -1,7 +1,12 @@
-from backtest.candle_backtester.candle_simulator import simulate_order
-
 #determines how we will attempt to fill the order
-def execute_order(order):
-    if order is None:
-        pass
+class DummyExecutor:
+    def __init__(self, portfolio, simulator):
+        self.portfolio = portfolio
+        self.simulator = simulator
 
+    def execute_order(self, order, candle):
+        if order is None:
+            pass
+
+        fill = self.simulator.simulate_order(order, candle)
+        self.portfolio.update_with_fill(fill)
