@@ -4,7 +4,9 @@ from data_ingestion.fetch_ohlcv import fetch_symbols_ohlcv
 from feature_engineering.rolling_features import add_rolling_features
 
 from strategies.mean_reversion.mean_reversion_basic import MeanReversionBasic
-from backtest.candle_backtester.candle_engine import run_backtest
+from backtest.candle_backtester.candle_engine import Backtester
+from backtest.candle_backtester.candle_executor import DummyExecutor
+from backtest.candle_backtester.candle_simulator import DummySimulator
 from backtest.candle_backtester.candle_portfolio import Portfolio
 from backtest.candle_backtester.candle_logger import Logger
 #from backtest.candle_backtester.candle_metrics import
@@ -36,16 +38,15 @@ if use_precomputed_features:
     candle_df = add_rolling_features(candle_df, required_features)
 
 
-#define portfolio and logger
-
-portfolio_params = {}
+#define backtesting classes
 portfolio = Portfolio()
-
+simulator = DummySimulator()
+executor = DummyExecutor(portfolio, simulator)
 logger = Logger()
-
+backtester = Backtester(strategy, executor, simulator, portfolio, logger, candle_df)
 
 #run strategy
-run_backtest(strategy, candle_df, portfolio, logger)
+
 
 
 #run metrics

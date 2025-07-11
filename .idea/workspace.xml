@@ -5,16 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="27846da3-7b97-4be0-aef8-3124700ba2e5" name="Changes" comment="ohlcv fetch asyncio added with delays - to be removed">
-      <change afterPath="$PROJECT_DIR$/main_backtest.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backtest/candle_backtester/candle_engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/backtest/candle_backtester/candle_engine.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backtest/candle_backtester/candle_executor.py" beforeDir="false" afterPath="$PROJECT_DIR$/backtest/candle_backtester/candle_executor.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backtest/candle_backtester/candle_portfolio.py" beforeDir="false" afterPath="$PROJECT_DIR$/backtest/candle_backtester/candle_portfolio.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backtest/candle_backtester/candle_simulator.py" beforeDir="false" afterPath="$PROJECT_DIR$/backtest/candle_backtester/candle_simulator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/feature_engineering/rolling_features.py" beforeDir="false" afterPath="$PROJECT_DIR$/feature_engineering/rolling_features.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/strategies/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/strategies/base.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/strategies/mean_reversion/mean_reversion_basic.py" beforeDir="false" afterPath="$PROJECT_DIR$/strategies/mean_reversion/mean_reversion_basic.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main_backtest.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_backtest.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
