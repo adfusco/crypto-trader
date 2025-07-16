@@ -16,7 +16,7 @@ class Logger:
 
     def log_portfolio_update(self, portfolio_dict):
         #add warnings/error raise if dict not properly formatted?
-        self.trade_log.append(portfolio_dict)
+        self.portfolio_log.append(portfolio_dict)
         if len(self.portfolio_log) >= self.flush_point:
             self.flush_portfolio_log()
 
