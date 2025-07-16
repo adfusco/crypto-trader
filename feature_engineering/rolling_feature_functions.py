@@ -9,7 +9,7 @@ def zscore_rolling(df, price_col, window=20):
     mean = price_series.rolling(window).mean()
     std = price_series.rolling(window).std()
 
-    return (price_series.iloc[-1] - mean)/std
+    return (price_series - mean)/std
 
 
 '''
