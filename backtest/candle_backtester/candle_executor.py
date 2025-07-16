@@ -5,8 +5,6 @@ class DummyExecutor:
         self.simulator = simulator
 
     def execute_order(self, order, candle):
-        if order is None:
-            pass
-
-        fill = self.simulator.simulate_order(order, candle)
-        self.portfolio.update_with_fill(fill)
+        if order is not None:
+            fill = self.simulator.simulate_order(order, candle)
+            self.portfolio.update_with_fill(fill)

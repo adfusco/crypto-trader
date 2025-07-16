@@ -1,6 +1,6 @@
 #simulates fills, slippage, latency, etc.
 class DummySimulator:
-    def __init__(self, slippage_bps=0.0, fee_rate=0.005):
+    def __init__(self, slippage_bps=0.0, fee_rate=0.0005):
         self.slippage_bps = slippage_bps
         self.fee_rate = fee_rate
 
