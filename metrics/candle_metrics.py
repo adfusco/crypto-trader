@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime
+import re
 
 class Metrics:
     def __init__(self, portfolio):
@@ -20,15 +20,17 @@ class Metrics:
         self.trade_history['exit_timestamp'] = pd.to_datetime(self.trade_history['exit_timestamp'])
         self.trade_history.set_index('exit_timestamp', inplace=True)
 
+        self.total_fees = portfolio.total_fees
 
-    def compute_stats(self, start=None, end=None):
+
+    def compute_stats(self, timeframe, start=None, end=None):
         start = start or self.portfolio.timestamps[0]
         end = end or self.portfolio.timestamps[-1]
 
         return {
             'total_return':self.total_return(start, end),
             'cagr':self.cagr(start, end),
-            'sharpe_ratio':self.sharpe_ratio(start, end),
+            'sharpe_ratio':self.sharpe_ratio(start, end, timeframe),
             'profit_factor':self.profit_factor(start, end),
             'win_rate':self.win_rate(start, end),
             'avg_trade_return':self.avg_trade_return(start, end),
@@ -41,7 +43,8 @@ class Metrics:
             'num_drawdowns':len(self.drawdowns),
             'max_drawdown_amt':self.max_drawdown_amt,
             'max_drawdown_pct':self.max_drawdown_pct,
-            'num_trades':len(self.trade_history)
+            'num_trades':len(self.trade_history),
+            'total_fees':self.total_fees
         }
 
     def total_return(self, start, end):
@@ -73,21 +76,42 @@ class Metrics:
         else: rf_returns = np.exp(rf_rate * n_days)
         return pd.Series(rf_returns, index=dates)
 
-    def _excess_returns(self, start, end, rf_rate, compounding):
+    def _get_obv(self, tf):
+        match = re.match(r"(\d+)([a-zA-Z]+)", tf)
+        if not match:
+            raise ValueError(f"Invalid timeframe format: {tf}")
+        number, unit = match.groups()
+
+        unit_multipliers = {
+            's': 31556952,
+            'm': 525960,
+            'h': 8766,
+            'd': 365.25,
+            'w': 52.1429,
+            'M': 12
+        }
+        return unit_multipliers[unit] / int(number)
+
+    def sharpe_ratio(self, start, end, timeframe, rf_rate=0.05, compounding='discrete'):
         sliced = self.equity_curve.loc[start:end]
-        equities = sliced['equity'].values
-        base_equity = sliced['equity'].iloc[0]
+        returns = sliced["equity"].pct_change().dropna()
 
-        returns = (equities - base_equity) / base_equity
-        risk_free_returns = self._risk_free_curve(start, end, rf_rate, compounding)
-        return returns - risk_free_returns
+        obv_per_year = self._get_obv(timeframe)
 
-    def sharpe_ratio(self, start, end, obv_per_year=365, rf_rate=0.05, compounding='daily'):
-        excess_free_returns = self._excess_returns(start, end, rf_rate, compounding)
-        mean = np.mean(excess_free_returns)
-        std = np.std(excess_free_returns)
+        if compounding == 'discrete': risk_free_returns = (1 + rf_rate) ** (1 / obv_per_year) - 1
+        else: risk_free_returns = np.exp(rf_rate / obv_per_year) - 1
 
-        return mean/std * np.sqrt(obv_per_year)
+        excess_returns = returns - risk_free_returns
+        mean_excess_return = excess_returns.mean()
+        volatility = excess_returns.std()
+
+        print("Mean excess return:", mean_excess_return)
+        print("Volatility:", volatility)
+        print("Periods per year:", obv_per_year)
+        print("Raw returns sample:", returns.head(5))
+        print("Excess returns sample:", excess_returns.head(5))
+
+        return mean_excess_return/volatility * np.sqrt(obv_per_year)
 
     def profit_factor(self, start, end):
         sliced = self.trade_history.loc[start:end]
