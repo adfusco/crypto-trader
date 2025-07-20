@@ -21,11 +21,27 @@ class Logger:
             self.flush_portfolio_log()
 
     def flush_trade_log(self):
-        os.makedirs(self.base_path, exist_ok=True)
-        pd.DataFrame(self.trade_log).to_csv(f'{self.base_path}/trade_log.csv', index=False)
+        full_path = f'{self.base_path}/trade_log.csv'
+        if os.path.exists(self.base_path):
+            mode = 'a'
+            header = False
+        else:
+            os.makedirs(self.base_path)
+            mode = 'w'
+            header = True
+
+        pd.DataFrame(self.trade_log).to_csv(full_path, mode=mode, header=header, index=True)
         self.trade_log = []
 
     def flush_portfolio_log(self):
-        os.makedirs(self.base_path, exist_ok=True)
-        pd.DataFrame(self.portfolio_log).to_csv(f'{self.base_path}/portfolio_log.csv', index=False)
+        full_path = f'{self.base_path}/portfolio_log.csv'
+        if os.path.exists(self.base_path):
+            mode = 'a'
+            header = False
+        else:
+            os.makedirs(self.base_path)
+            mode = 'w'
+            header = True
+
+        pd.DataFrame(self.portfolio_log).to_csv(full_path, mode=mode, header=header, index=True)
         self.portfolio_log = []
