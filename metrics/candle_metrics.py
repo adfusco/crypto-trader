@@ -3,34 +3,35 @@ import pandas as pd
 import re
 
 class Metrics:
-    def __init__(self, portfolio):
-        self.portfolio = portfolio
-        self.timestamps = portfolio.timestamps
+    def __init__(self, portfolio_dict):
+        self.portfolio_dict = portfolio_dict
+        self.timeframe = portfolio_dict['timeframe']
+        self.timestamps = portfolio_dict['timestamps']
 
-        self.equity_curve = pd.DataFrame(portfolio.equity_curve)
+        self.equity_curve = pd.DataFrame(portfolio_dict['equity_curve'])
         self.equity_curve['timestamp'] = pd.to_datetime(self.equity_curve['timestamp'])
         self.equity_curve.set_index('timestamp', inplace=True)
 
-        self.max_equity = portfolio.max_equity
-        self.drawdowns = portfolio.drawdowns
-        self.max_drawdown_amt = portfolio.max_drawdown_amt
-        self.max_drawdown_pct = portfolio.max_drawdown_pct
+        self.max_equity = portfolio_dict['max_equity']
+        self.drawdowns = portfolio_dict['drawdowns']
+        self.max_drawdown_amt = portfolio_dict['max_drawdown_amt']
+        self.max_drawdown_pct = portfolio_dict['max_drawdown_pct']
 
-        self.trade_history = pd.DataFrame(portfolio.trade_history)
+        self.trade_history = pd.DataFrame(portfolio_dict['trade_history'])
         self.trade_history['exit_timestamp'] = pd.to_datetime(self.trade_history['exit_timestamp'])
         self.trade_history.set_index('exit_timestamp', inplace=True)
 
-        self.total_fees = portfolio.total_fees
+        self.total_fees = portfolio_dict['total_fees']
 
 
-    def compute_stats(self, timeframe, start=None, end=None):
-        start = start or self.portfolio.timestamps[0]
-        end = end or self.portfolio.timestamps[-1]
+    def compute_stats(self, start=None, end=None):
+        start = start or self.timestamps[0]
+        end = end or self.timestamps[-1]
 
         return {
             'total_return':self.total_return(start, end),
             'cagr':self.cagr(start, end),
-            'sharpe_ratio':self.sharpe_ratio(start, end, timeframe),
+            'sharpe_ratio':self.sharpe_ratio(start, end, self.timeframe),
             'profit_factor':self.profit_factor(start, end),
             'win_rate':self.win_rate(start, end),
             'avg_trade_return':self.avg_trade_return(start, end),
@@ -46,6 +47,16 @@ class Metrics:
             'num_trades':len(self.trade_history),
             'total_fees':self.total_fees
         }
+
+    def print_stats(self, start=None, end=None):
+        computed_stats = self.compute_stats(start, end)
+        existing_stats = self.return_basic_stats()
+
+        for name, value in computed_stats.items():
+            print(f'{name}: ' + str(value))
+        print('~~~')
+        for name, value in existing_stats.items():
+            print(f'{name}: ' + str(value))
 
     def total_return(self, start, end):
         sliced = self.equity_curve.loc[start:end]
@@ -104,12 +115,6 @@ class Metrics:
         excess_returns = returns - risk_free_returns
         mean_excess_return = excess_returns.mean()
         volatility = excess_returns.std()
-
-        print("Mean excess return:", mean_excess_return)
-        print("Volatility:", volatility)
-        print("Periods per year:", obv_per_year)
-        print("Raw returns sample:", returns.head(5))
-        print("Excess returns sample:", excess_returns.head(5))
 
         return mean_excess_return/volatility * np.sqrt(obv_per_year)
 
