@@ -133,10 +133,9 @@ class Portfolio:
             live_price = row.get(f'{symbol}_{price_col}')
             if live_price is None:
                 raise ValueError(f'no price for symbol {symbol}')
-            entry_price = pos['entry_price']
             qty = pos['qty']
 
-            unrealized = (live_price - entry_price) * qty
+            unrealized = live_price * qty
             self.unrealized_pnl += unrealized
 
             pos_value = live_price * qty
@@ -175,7 +174,8 @@ class Portfolio:
         self.logger.log_portfolio_update(equity_dict)
 
         #print debugger
-        #print(f"[{timestamp}] live price: {row.get(f'BTC/USDT_{price_col}')}, cash: {self.cash:.2f}, unrealized: {self.unrealized_pnl:.2f}, equity: {self.equity:.2f}, open_positions: {len(self.open_positions)}")
+        #symbol_print = 'ETH/USDT'
+        #print(f"[{timestamp}] live price: {row.get(f'{symbol_print}_{price_col}')}, cash: {self.cash:.2f}, unrealized: {self.unrealized_pnl:.2f}, equity: {self.equity:.2f}, open_positions: {len(self.open_positions)}")
 
     def get_equity(self):
         return self.equity
