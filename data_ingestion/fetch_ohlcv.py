@@ -2,7 +2,7 @@ import pandas as pd
 import asyncio
 import os
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 def get_path_symbol(sym, replacement='_'):
     return re.sub(r'[<>:"/\\|?*\x00-\x1F]', replacement, sym).strip()
@@ -20,14 +20,14 @@ def get_minutes(timeframe):
 
     return unit_minutes[unit]
 
-
-async def fetch_symbol(exchange, symbol, symbol_dataframes, timeframe='1d', limit=500, since=None, save_dir='data'):
+#MAYBE MAKE IT SO SAVE_DIR IS PATH_TO_CSVS? JUST FOR CONSISTENCY
+async def fetch_symbol(exchange, symbol, symbol_dataframes, timeframe='1d', limit=500, since=None, save_dir='raw_csvs'):
     os.makedirs(save_dir, exist_ok=True)
     if symbol not in exchange.markets:
         raise ValueError(f"symbol {symbol} not found on {exchange.id}")
 
     try:
-        print(f'fetching {symbol} since {since}...')
+        print(f'fetching {symbol} since {datetime.fromtimestamp(since / 1000, tz=timezone.utc)}...')
         data = await exchange.fetch_ohlcv(symbol, timeframe, limit=limit, since=since)
         print(f"{symbol}: fetched {len(data)} rows")
 
@@ -53,17 +53,19 @@ async def fetch_with_delay(exchange, symbol, symbol_dataframes, timeframe, limit
     return await fetch_symbol(exchange, symbol, symbol_dataframes, timeframe, limit, since, save_dir)
 
 
-async def fetch_symbols_ohlcv(exchange, symbols, timeframe='1d', limit=500, since=None, save_dir='data'):
+async def fetch_symbols_ohlcv(exchange, symbols, timeframe='1d', limit=500, since=None, save_dir='raw_csvs'):
     batch_size = 15
     delay_between_batches = 1.0
-    delay_between_fetches = exchange.rateLimit * 1.25
+    delay_between_fetches = 1 / (exchange.rateLimit * 1000 * 1.25)
+    print(delay_between_fetches)
 
     symbol_dataframes = {}
     symbol_since_timestamps = {}
     for symbol in symbols:
         if since is None:
-            minutes = get_minutes(timeframe)
+            minutes = get_minutes(timeframe) * limit
             since = datetime.now() - timedelta(minutes=minutes)
+            since = int(since.replace(tzinfo=timezone.utc).timestamp() * 1000)
         symbol_since_timestamps[symbol] = since
 
     await exchange.load_markets()
@@ -99,3 +101,4 @@ async def fetch_symbols_ohlcv(exchange, symbols, timeframe='1d', limit=500, sinc
         full_path = os.path.join(save_dir, symbol_name)
 
         dataframe.to_csv(full_path, index=False)
+        print(f"{symbol}: saved to {full_path}")
