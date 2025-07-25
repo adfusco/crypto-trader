@@ -33,7 +33,7 @@ strategy_params = {
 }
 strategy = MeanReversionBasic(strategy_params)
 
-#prepare data
+#prepare raw_csvs
 year, month, day = 2022, 1, 1
 dt = datetime(year, month, day, tzinfo=timezone.utc)
 
@@ -42,7 +42,7 @@ symbols = [symbol]
 timeframe = '1d'
 since_ms = int(dt.timestamp() * 1000)
 limit = 1000
-path_to_csvs = 'data_ingestion/data'
+path_to_csvs = 'data_ingestion/raw_csvs'
 
 fetch_params = {
     'exchange':exchange,
@@ -59,13 +59,13 @@ async def main():
 asyncio.run(main())
 
 features = strategy.required_features
-path_to_merged_data = 'data_ingestion/clean_data'
+path_to_merged_data = 'data_ingestion/clean_data/backtest'
 candle_df = prepare_candle_data(symbols, use_precomputed_features, features, path_to_csvs, path_to_merged_data)
 
 #define backtesting classes
 logger = Logger(base_path='logs/dummy_test')
 portfolio = Portfolio(logger, init_cash=100000.0)
-simulator = DummySimulator()
+simulator = DummySimulator(slippage_bps=5)
 executor = DummyExecutor(portfolio, simulator)
 backtester = Backtester(strategy, executor, simulator, portfolio, logger, candle_df)
 
