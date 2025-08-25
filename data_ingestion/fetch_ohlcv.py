@@ -57,7 +57,6 @@ async def fetch_symbols_ohlcv(exchange, symbols, timeframe='1d', limit=500, sinc
     batch_size = 15
     delay_between_batches = 1.0
     delay_between_fetches = 1 / (exchange.rateLimit * 1000 * 1.25)
-    print(delay_between_fetches)
 
     symbol_dataframes = {}
     symbol_since_timestamps = {}
