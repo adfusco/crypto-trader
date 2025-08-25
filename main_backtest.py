@@ -6,7 +6,7 @@ import pickle
 from data_ingestion.fetch_ohlcv import fetch_symbols_ohlcv
 from data_ingestion.prepare_data import prepare_candle_data
 
-from strategies.mean_reversion.mean_reversion_basic import MeanReversionBasic
+from strategies.mean_reversion.mr_basic import MeanReversionBasic
 from backtest.candle_backtester.candle_engine import Backtester
 from backtest.candle_backtester.candle_executor import DummyExecutor
 from backtest.candle_backtester.candle_simulator import DummySimulator
