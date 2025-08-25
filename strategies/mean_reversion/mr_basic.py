@@ -41,6 +41,7 @@ class MeanReversionBasic(Strategy):
                 self.state['position'] = position
             else:
                 raise ValueError('invalid position')
+        else: self.state['position'] = None
 
     def gen_signal(self):
         pos = self.state.get('position')
@@ -70,16 +71,16 @@ class MeanReversionBasic(Strategy):
         return {'side':'hold'}
 
     def gen_order(self, signal):
-        if signal['side'] == 'hold': return None
+        if signal['side'] == 'hold': return [None]
         symbol = self.params['symbol']
         qty = 1
 
-        return {
+        return [{
             'symbol':symbol,
             'side':signal['side'],
             'qty':qty,
             'order_type':signal['order_type'],
-        }
+        }]
 
     def reset(self):
         self.state.clear()
