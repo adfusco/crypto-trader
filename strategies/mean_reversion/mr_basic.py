@@ -20,31 +20,33 @@ class MeanReversionBasic(Strategy):
     def __init__(self, params: dict):
         super().__init__(params)
         self.required_features = {'zscore': {'window':self.params['window'], 'price_col':self.params['price_col']}}
-        self.prices = CircularBuffer(size=self.params['window'])
-
-    def update_state(self, candle_row, open_positions=None):
-        symbol = self.params['symbol']
-        price_col = self.params['price_col']
-        price = candle_row[f"{symbol}_{price_col}"]
-        self.prices.append(price)
 
         precomputed = self.params['use_precomputed_features']
+        if not precomputed: self.prices = CircularBuffer(size=self.params['window'])
+
+    def update_state(self, candle_row, open_positions=None):
+        precomputed = self.params['use_precomputed_features']
+        symbol = self.params['symbol']
+
         if precomputed:
             self.state['zscore'] = candle_row[f'{symbol}_zscore']
         else:
+            price_col = self.params['price_col']
+            price = candle_row[f"{symbol}_{price_col}"]
+            self.prices.append(price)
             self.state['zscore'] = ffs.zscore(self.prices.to_array())
 
         if open_positions:
-            position = open_positions[next(iter(open_positions))]['side']
-            valid_positions = {'long', 'short'}
-            if position in valid_positions:
-                self.state['position'] = position
+            side = open_positions[next(iter(open_positions))]['side']
+            valid_sides = {'long', 'short'}
+            if side in valid_sides:
+                self.state['position'] = side
             else:
                 raise ValueError('invalid position')
         else: self.state['position'] = None
 
     def gen_signal(self):
-        pos = self.state.get('position')
+        pos = self.state['position']
         z = self.state['zscore']
 
         z_long_entry = self.params['zscores']['long_entry']
@@ -75,12 +77,11 @@ class MeanReversionBasic(Strategy):
         symbol = self.params['symbol']
         qty = 1
 
-        return [{
-            'symbol':symbol,
+        return {symbol: {
             'side':signal['side'],
             'qty':qty,
             'order_type':signal['order_type'],
-        }]
+        }}
 
     def reset(self):
         self.state.clear()
