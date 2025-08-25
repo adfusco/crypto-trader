@@ -1,15 +1,25 @@
 import feature_engineering.feature_functions as ffs
 import numpy as np
 import pandas as pd
-import ta.momentum, ta.trend, ta.volatility, ta.volume
 
-def zscore_rolling(df, price_col, window=20):
+#single asset functions
+def zscore(df, price_col, window=20):
     price_series = df[price_col]
 
     mean = price_series.rolling(window).mean()
     std = price_series.rolling(window).std()
 
-    return (price_series - mean)/std
+    return {'zscore': (price_series - mean)/std}
+
+
+#multi asset functions
+def pairs_spread(df, hedge_ratio, symbols, price_col):
+    sym_a, sym_b = symbols
+
+    price_series_a = df[f'{sym_a}_{price_col}']
+    price_series_b = df[f'{sym_b}_{price_col}']
+
+    return {f'{sym_a}_{sym_b} pairs spread': price_series_a - hedge_ratio * price_series_b}
 
 
 '''
