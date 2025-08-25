@@ -12,7 +12,7 @@ class Strategy:
         self.state = {}
 
     def update_state(self, market_candle):
-        #ingests relevant data from new candle
+        #ingests relevant raw_csvs from new candle
         pass
 
     def gen_signal(self):
