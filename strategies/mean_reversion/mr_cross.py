@@ -89,7 +89,7 @@ class MeanReversionPair(Strategy):
         order_dict = {}
 
         for symbol in symbols:
-            if signal['side'] == 'hold': return [None]
+            if signal['side'] == 'hold': return {}
             qty = 1
 
             order_dict[symbol] = {

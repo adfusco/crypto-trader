@@ -29,24 +29,23 @@ class Backtester:
             else:
                 order_requests = self._close_positions(closing_order_type)
 
-            for order in order_requests:
-                self.executor.execute_order(order, row)
+            self.executor.execute_orders(order_requests, row)
 
             self.portfolio.mark_to_market(row, price_col, row['timestamp'])
 
     def _close_positions(self, closing_order_type):
-        close_orders = []
+        close_orders = {}
         for symbol, pos in self.portfolio.open_positions.items():
             reverse_side = 'long' if pos['side'] == 'short' else 'short'
             reverse_qty = 1 if reverse_side == 'long' else -1
             order_type = closing_order_type
 
             close_order = {
-            'symbol':symbol,
             'side':reverse_side,
             'qty':reverse_qty,
-            'order_type':order_type,
-        }
-            close_orders.append(close_order)
+            'order_type':order_type
+            }
+
+            close_orders[symbol] = close_order
 
         return close_orders

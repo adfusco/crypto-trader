@@ -73,7 +73,7 @@ class MeanReversionBasic(Strategy):
         return {'side':'hold'}
 
     def gen_order(self, signal):
-        if signal['side'] == 'hold': return [None]
+        if signal['side'] == 'hold': return {}
         symbol = self.params['symbol']
         qty = 1
 

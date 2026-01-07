@@ -59,8 +59,8 @@ async def main():
 asyncio.run(main())
 
 features = strategy.required_features
-path_to_merged_data = 'data_ingestion/clean_data/backtest'
-candle_df = prepare_candle_data(symbols, use_precomputed_features, features, path_to_csvs, path_to_merged_data)
+path_to_merged_data = 'data_ingestion/clean_data/backtest/current_data.csv'
+candle_df = prepare_candle_data(symbols, use_precomputed_features, features, None, path_to_csvs, path_to_merged_data)
 
 #define backtesting classes
 logger = Logger(base_path='logs/dummy_test')

@@ -4,11 +4,11 @@ class DummySimulator:
         self.slippage_bps = slippage_bps
         self.fee_rate = fee_rate
 
-    def simulate_order(self, orders, candle_row):
+    def simulate_orders(self, orders, candle_row):
         ts = candle_row['timestamp']
         fills = []
 
-        for symbol, order in orders:
+        for symbol, order in orders.items():
             side = order['side']
             qty = order['qty']
             order_type = order['order_type']
