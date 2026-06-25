@@ -1,16 +1,30 @@
-import matplotlib.pyplot as plt
+import argparse
+import os
 import pickle
 
-from metrics.candle_metrics import Metrics
+import matplotlib.pyplot as plt
 
-portfolio_name = 'MeanReversionBasic'
-portfolio_path = 'portfolio_data/' + portfolio_name + '.pkl'
+from metrics.metrics import Metrics
+from metrics.plots import plot_performance
 
-with open(portfolio_path, 'rb') as f:
-    portfolio_data = pickle.load(f)
+HERE = os.path.dirname(os.path.abspath(__file__))
 
-metrics = Metrics(portfolio_data)
-metrics.print_stats()
 
-plt.plot(metrics.equity_curve.index, metrics.equity_curve['equity'])
-plt.show()
+def load_metrics(portfolio_name):
+    portfolio_path = os.path.join(HERE, 'portfolio_data', f'{portfolio_name}.pkl')
+    with open(portfolio_path, 'rb') as f:
+        portfolio_data = pickle.load(f)
+    return Metrics(portfolio_data)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Print stats and plot a backtest result.')
+    parser.add_argument('portfolio_name', nargs='?', default='mr_basic_backtest',
+                        help='config name (PKL stem in portfolio_data/)')
+    args = parser.parse_args()
+
+    metrics = load_metrics(args.portfolio_name)
+    metrics.print_stats()
+
+    plot_performance(metrics)
+    plt.show()

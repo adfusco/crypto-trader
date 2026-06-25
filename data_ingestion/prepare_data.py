@@ -1,24 +1,25 @@
-import pandas as pd
 import os
+import pandas as pd
 
-from data_ingestion.fetch_ohlcv import get_path_symbol
+from data_ingestion.fetch_ohlcv import csv_path
 from feature_engineering.rolling_features import add_rolling_features
 
-def match_sort_paths(symbols, path_to_csvs):
-    paths = set(os.path.join(path_to_csvs, path) for path in os.listdir(path_to_csvs))
-
+def match_sort_paths(symbols, timeframe, path_to_csvs):
     syms_and_paths = {}
+    missing = []
     for symbol in symbols:
-        csv_name = f'{get_path_symbol(symbol)}.csv'
-        full_path = os.path.join(path_to_csvs, csv_name)
-        if full_path in paths:
+        full_path = csv_path(symbol, timeframe, path_to_csvs)
+        if os.path.exists(full_path):
             syms_and_paths[symbol] = full_path
+        else:
+            missing.append(symbol)
+
+    if missing:
+        raise FileNotFoundError(
+            f"no cached {timeframe} data for {missing} in '{path_to_csvs}/' — run with --fetch")
 
     syms_and_paths = dict(sorted(syms_and_paths.items()))
-    symbols = list(syms_and_paths.keys())
-    paths = list(syms_and_paths.values())
-
-    return symbols, paths
+    return list(syms_and_paths.keys()), list(syms_and_paths.values())
 
 def load_prepare_df(path, symbol, use_precomputed_features, single_asset_features, merge_on):
     df = pd.read_csv(path)
@@ -26,8 +27,8 @@ def load_prepare_df(path, symbol, use_precomputed_features, single_asset_feature
         df = add_rolling_features(df, single_asset_features)
     return df.rename(columns=lambda x: f'{symbol}_' + x if x != merge_on else x)
 
-def prepare_candle_data(symbols, use_precomputed_features, single_asset_features, multi_asset_features, path_to_csvs, path_to_output_csv, merge_on='timestamp'):
-    symbols, paths = match_sort_paths(symbols, path_to_csvs)
+def prepare_candle_data(symbols, use_precomputed_features, single_asset_features, multi_asset_features, path_to_csvs, path_to_output_csv, timeframe='1d', merge_on='timestamp'):
+    symbols, paths = match_sort_paths(symbols, timeframe, path_to_csvs)
 
     output_df = load_prepare_df(paths[0], symbols[0], use_precomputed_features, single_asset_features, merge_on)
     for i, path in enumerate(paths[1:], start=1):

@@ -1,74 +1,62 @@
-from asset_analysis.make_df import get_top_syms, get_merged_df
-
 import pandas as pd
-from datetime import datetime
-from itertools import combinations
 
-from statsmodels.tsa.vector_ar.vecm import coint_johansen
-from arch.unitroot import PhillipsPerron
+from asset_analysis.make_df import get_top_syms
+from asset_analysis.relationships import RELATIONSHIP_REGISTRY
+from data_ingestion.fetch_ohlcv import csv_path, fetch_to_csvs
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 
 
-def johansen_test_pairs(price_df, det_order=1, lag_num=1):
-    results = []
-    for pair in combinations(price_df.columns, r=2):
-        sub_df = price_df[list(pair)].dropna()
+def load_price_df(symbols, price_col, path_to_csvs, timeframe='1d'):
+    """Outer-join the given symbols' price_col series from their raw CSVs into a
+    timestamp-indexed wide frame, columns ordered to match `symbols`.
 
-        result = coint_johansen(sub_df, det_order, lag_num)
-        if result.lr1[0] > result.cvt[0, 1]:
-            results.append({
-                "pair":pair,
-                "trace_stat":result.lr1[0],
-                "crit_val_5pct":result.cvt[0, 1],
-                "hedge_ratio":result.evec[:, 0]
-            })
-
-    results = pd.DataFrame(results)
-    results.sort_values(by='trace_stat', ascending=False, inplace=True)
-    return results
+    Outer join keeps each symbol's full history; callers align per use (a pair's
+    overlapping range via dropna) so one short-history symbol doesn't truncate all.
+    """
+    df = None
+    for symbol in symbols:
+        path = csv_path(symbol, timeframe, path_to_csvs)
+        series = pd.read_csv(path)[['timestamp', price_col]].rename(columns={price_col: symbol})
+        df = series if df is None else df.merge(series, on='timestamp', how='outer')
+    return df.sort_values('timestamp').set_index('timestamp')
 
 
-def main():
-    #TEMPORARY SOLUTION...
-    saved = True
-
-    num_symbols = 30
-    by = 'quoteVolume'
-    price_col = 'close'
-
-    base_path = '../data_ingestion/clean_data/asset_analysis/'
-    csv_name = f'top_{num_symbols}_{by}_{datetime.now().date()}.csv'
-    full_path = base_path + csv_name
-
-    if not saved:
-        symbols_by_vol = get_top_syms(num_symbols, by)
-        symbols = [symbol for symbol, volume in symbols_by_vol]
-
-        merge_params = {
-            'symbols':symbols,
-            'timeframe':'1d',
-            'limit':500,
-            'output_path':full_path
-        }
-        get_merged_df(**merge_params)
+def _slice_window(price_df, start, end):
+    """Bound the price frame to [start, end]. The index is sorted ISO date strings,
+    so lexicographic .loc slicing is chronological. Restricting the screen/estimate
+    window is how you keep pair selection from peeking at out-of-sample data."""
+    if start is None and end is None:
+        return price_df
+    return price_df.loc[start:end]
 
 
-    merged_df = pd.read_csv(full_path)
-    clean_df = merged_df.drop(columns=[x for x in merged_df.columns if price_col not in x])
-    clean_df = clean_df.drop(columns=[x for x in clean_df.columns if pd.isna(clean_df.iloc[0][x])])
+def screen_pairs(symbols, path_to_csvs, method='johansen', price_col='close',
+                 timeframe='1d', start=None, end=None, **params):
+    """Load `symbols` and rank their pairs by the named relationship method
+    (see RELATIONSHIP_REGISTRY), screening only over [start, end]."""
+    price_df = load_price_df(symbols, price_col, path_to_csvs, timeframe)
+    price_df = _slice_window(price_df, start, end)
+    return RELATIONSHIP_REGISTRY[method].require_screen()(price_df, **params)
 
-    valid_df = clean_df
-    crit_value = 0.1
-    drop = []
-    for col in valid_df.columns:
-        pp_test = PhillipsPerron(valid_df[col])
-        if pp_test.pvalue < crit_value:
-            drop.append(col)
-    valid_df = valid_df.drop(columns=drop)
 
-    print(johansen_test_pairs(valid_df))
+def estimate_pair(symbols, price_col, path_to_csvs, method='johansen',
+                  timeframe='1d', start=None, end=None, **params):
+    """Estimate the tradeable parameter (e.g. hedge ratio) for one pair from CSVs
+    over [start, end] -> (param, meta). See RELATIONSHIP_REGISTRY[method].estimate."""
+    price_df = load_price_df(list(symbols), price_col, path_to_csvs, timeframe)
+    price_df = _slice_window(price_df, start, end)
+    return RELATIONSHIP_REGISTRY[method].require_estimate()(price_df, **params)
+
+
+def main(num_symbols=30, by='quoteVolume', path_to_csvs='data_ingestion/raw_csvs',
+         fetch=False, method='johansen', start='2019-01-01', timeframe='1d'):
+    symbols = [symbol for symbol, _ in get_top_syms(num_symbols, by)]
+    if fetch:
+        fetch_to_csvs(symbols, timeframe, start, None, path_to_csvs)
+    print(screen_pairs(symbols, path_to_csvs, method=method, timeframe=timeframe))
+
 
 if __name__ == '__main__':
     main()

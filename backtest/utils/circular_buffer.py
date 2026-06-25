@@ -14,12 +14,12 @@ class CircularBuffer:
             self.full = True
 
     def latest(self):
-        return self.buffer[(self.index - 1)] % self.size
+        return self.buffer[(self.index - 1) % self.size]
 
     def to_array(self):
         if not self.full:
             return self.buffer[:self.index]
-        return np.concatenate(self.buffer[self.index:], self.buffer[:self.index])
+        return np.concatenate([self.buffer[self.index:], self.buffer[:self.index]])
 
     def __getitem__(self, idx):
         if not self.full and idx >= self.index:

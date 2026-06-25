@@ -6,16 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="27846da3-7b97-4be0-aef8-3124700ba2e5" name="Changes" comment="ohlcv fetch asyncio added with delays - to be removed">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backtest/candle_backtester/candle_engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/backtest/candle_backtester/candle_engine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backtest/candle_backtester/candle_executor.py" beforeDir="false" afterPath="$PROJECT_DIR$/backtest/candle_backtester/candle_executor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backtest/candle_backtester/candle_simulator.py" beforeDir="false" afterPath="$PROJECT_DIR$/backtest/candle_backtester/candle_simulator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_ingestion/clean_data/backtest/current_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data_ingestion/clean_data/backtest/current_data.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_ingestion/raw_csvs/ETH_USDT.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data_ingestion/raw_csvs/ETH_USDT.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/dummy_test/portfolio_log.csv" beforeDir="false" afterPath="$PROJECT_DIR$/logs/dummy_test/portfolio_log.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main_backtest.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_backtest.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/metrics/portfolio_data/MeanReversionBasic.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/metrics/portfolio_data/MeanReversionBasic.pkl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/strategies/mean_reversion/mr_basic.py" beforeDir="false" afterPath="$PROJECT_DIR$/strategies/mean_reversion/mr_basic.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/strategies/mean_reversion/mr_cross.py" beforeDir="false" afterPath="$PROJECT_DIR$/strategies/mean_reversion/mr_cross.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

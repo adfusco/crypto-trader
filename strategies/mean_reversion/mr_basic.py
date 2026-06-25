@@ -3,26 +3,24 @@ from backtest.utils.circular_buffer import CircularBuffer
 import feature_engineering.feature_functions as ffs
 
 class MeanReversionBasic(Strategy):
-    @staticmethod
-    def required_params():
-        return ['use_precomputed_features', 'symbol', 'window', 'price_col', 'zscores']
-
     @classmethod
     def default_params(cls):
         return {
-            'use_precomputed_features':True,
-            'symbol':None,
-            'window':20,
-            'price_col':'close',
-            'zscores':{'entry_long':-1, 'exit_long':-1, 'entry_short':1, 'exit_short':1}
+            'use_precomputed_features': True,
+            'symbol': None,
+            'window': 20,
+            'price_col': 'close',
+            'risk_pct': 0.02,
+            'zscores': {'long_entry': -1, 'long_exit': -1, 'short_entry': 1, 'short_exit': 1}
         }
 
     def __init__(self, params: dict):
         super().__init__(params)
-        self.required_features = {'zscore': {'window':self.params['window'], 'price_col':self.params['price_col']}}
+        self.required_features = {'zscore': {'window': self.params['window'], 'price_col': self.params['price_col']}}
 
         precomputed = self.params['use_precomputed_features']
-        if not precomputed: self.prices = CircularBuffer(size=self.params['window'])
+        if not precomputed:
+            self.prices = CircularBuffer(size=self.params['window'])
 
     def update_state(self, candle_row, open_positions=None):
         precomputed = self.params['use_precomputed_features']
@@ -43,7 +41,8 @@ class MeanReversionBasic(Strategy):
                 self.state['position'] = side
             else:
                 raise ValueError('invalid position')
-        else: self.state['position'] = None
+        else:
+            self.state['position'] = None
 
     def gen_signal(self):
         pos = self.state['position']
@@ -61,27 +60,34 @@ class MeanReversionBasic(Strategy):
 
         if pos is None:
             if long_entry:
-                return {'side':'long', 'order_type':'market'}
+                return {'side': 'long', 'order_type': 'market'}
             elif short_entry:
-                return {'side':'short', 'order_type':'market'}
+                return {'side': 'short', 'order_type': 'market'}
 
         elif pos == 'long' and long_exit:
-            return {'side':'short', 'order_type':'market'}
+            return {'side': 'short', 'order_type': 'market'}
         elif pos == 'short' and short_exit:
-            return {'side':'long', 'order_type':'market'}
+            return {'side': 'long', 'order_type': 'market'}
 
-        return {'side':'hold'}
+        return {'side': 'hold'}
 
-    def gen_order(self, signal):
-        if signal['side'] == 'hold': return {}
+    def gen_order(self, signal, row, portfolio):
+        order_dict = {}
+        if signal['side'] == 'hold':
+            return order_dict
+
+        equity = portfolio.get_equity()
+        risk_pct = self.params['risk_pct']
+        price_col = self.params['price_col']
+
         symbol = self.params['symbol']
-        qty = 1
+        price = row[f'{symbol}_{price_col}']
+        qty = int(equity * risk_pct / price)
+        if qty > 0:
+            order_dict[symbol] = {
+                'side': signal['side'],
+                'qty': qty,
+                'order_type': signal['order_type'],
+            }
 
-        return {symbol: {
-            'side':signal['side'],
-            'qty':qty,
-            'order_type':signal['order_type'],
-        }}
-
-    def reset(self):
-        self.state.clear()
+        return order_dict
