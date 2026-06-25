@@ -1,16 +1,16 @@
 # Crypto Trader
 
-An event-driven backtesting engine for cryptocurrency strategies, with walk-forward validation and cointegration-based pairs trading. Built to evaluate systematic strategies honestly: no lookahead, out-of-sample validation, and parameter fitting that never sees the test window.
+An event-driven backtesting engine for cryptocurrency strategies, with walk-forward validation and cointegration-based pairs trading. The design goal is to avoid the usual ways a backtest overstates itself: lookahead, in-sample fitting, and pair-selection bias.
 
 ## Features
 
-- Event-driven engine with next-bar fills (signals generated on bar `i` execute on bar `i+1` open, so no strategy can trade on information it would not have had)
+- Event-driven engine with next-bar fills: a signal on bar `i` fills at the bar `i+1` open, not the close that generated it
 - Walk-forward validation with fold-local fitting: hedge ratios, pair selection, and trading-rule parameters are all fit on each fold's train window only
 - Cointegration screening (Johansen trace test with a Phillips-Perron unit-root pre-filter) to find tradeable pairs
 - Pairs mean-reversion strategy trading a hedged cointegration spread
 - Fixed-fractional position sizing, slippage, and fee modeling
 - Transaction-cost sensitivity sweep that finds the break-even slippage or fee level for a strategy
-- Pluggable strategies, objectives, and relationship methods dispatched by config string through registries
+- Pluggable strategies, objectives, and relationship methods, selected by name from registries
 - Equity-vs-benchmark, drawdown, and trade-marker visualization
 - Config-driven CLI: one command runs a backtest or a full walk-forward and prints summary stats
 
@@ -19,11 +19,11 @@ An event-driven backtesting engine for cryptocurrency strategies, with walk-forw
 Data flows from ingestion to a decision loop to performance metrics:
 
 ```
-ccxt OHLCV  ->  prepare + merge + features  ->  Backtester loop  ->  Metrics / plots
+ccxt OHLCV  =>  prepare + merge + features  =>  Backtester loop  =>  Metrics / plots
                                                       |
-                          Strategy.gen_signal -> gen_order
+                                      Strategy.gen_signal => gen_order
                                                       |
-                                   Executor -> Simulator (slippage, fills)
+                                   Executor => Simulator (slippage, fills)
                                                       |
                                    Portfolio (positions, P&L, equity curve)
 ```
@@ -43,15 +43,13 @@ Directory map:
 | `configs/` | One config per strategy-mode combination |
 | `tests/` | Unit tests for engine, portfolio, relationships, config |
 
-## Design decisions worth knowing
+## Methodology
 
-**No lookahead** A signal computed from bar `i` fills on bar `i+1` open via a pending-orders queue, never on the close that produced it. This was a real bug in an earlier version and fixing it changed every result.
+**No lookahead** A signal computed from bar `i` fills on bar `i+1` open via a pending-orders queue, never on the close that produced it.
 
 **Fold-local fitting** In walk-forward, the hedge ratio is re-estimated on each fold's train window, so beta never sees the data it is evaluated on. The grid search over trading-rule parameters is scored on train only.
 
-**Selection bias is handled, not hidden** Choosing which pair to trade by full-sample cointegration leaks the test window into the choice, even if beta is refit online. The walk-forward selector screens each fold's train window and trades the top cointegrated pair, or sits the fold out if none cointegrate. The resulting out-of-sample number is lower than a hand-picked pair would suggest, which is the point.
-
-**Registry pattern** Strategies, objectives, and relationship methods are looked up by string from registries, so a config references them by name and adding one is a single registry entry with no import wiring.
+**Selection bias handled, not hidden** Choosing which pair to trade by full-sample cointegration leaks the test window into the choice, even if beta is refit online. The walk-forward selector screens each fold's train window and trades the top cointegrated pair, or sits the fold out if none cointegrate. The resulting out-of-sample figure is lower than a hand-picked pair would suggest.
 
 ## Quickstart
 
@@ -83,11 +81,11 @@ python -m backtest mr_pairs_select_walkforward
 | Profit factor | 1.23 | 1.29 |
 | Trades | 86 | 106 |
 
-The selector trades a different pair on most folds and sits out 2 of 17 when nothing cointegrates. The gap between the two columns is the selection bias that an in-sample pair choice would have hidden, here measured instead of assumed away.
+The selector trades a different pair on most folds and sits out 2 of 17 when nothing cointegrates. The gap between the two columns is the selection bias an in-sample pair choice would have hidden.
 
 ![Walk-forward equity vs buy-and-hold](docs/images/walkforward_equity.png)
 
-The strategy (blue) stays close to flat and market-neutral while the buy-and-hold basket (gray) falls from 120k to 30k across the 2022 bear market. The point of a market-neutral pairs strategy is not to beat a bull market, it is to hold a small drawdown through one.
+The strategy (blue) stays roughly flat and market-neutral while the buy-and-hold basket (gray) falls from 120k to 30k through the 2022 bear market.
 
 ## Configuration
 
@@ -143,7 +141,7 @@ python -m backtest.cost_sweep mr_pairs_backtest --param slippage_bps --plot
 
 ![Total return vs slippage](docs/images/cost_sweep.png)
 
-For `mr_pairs_backtest` the return crosses zero around 44 bps of slippage, so the strategy's edge is thin and cost-sensitive, exactly the kind of thing a sweep surfaces before capital is committed. Swap `--param fee_rate` to sweep fees, or `--metric sharpe_ratio` to plot a different axis. The sweep reuses the same run path as the main CLI, so it works for any strategy or mode unchanged.
+For `mr_pairs_backtest` the return crosses zero around 44 bps of slippage, so the edge is thin and cost-sensitive. Swap `--param fee_rate` to sweep fees, or `--metric sharpe_ratio` to plot a different axis. The sweep reuses the main CLI's run path, so it works for any strategy or mode unchanged.
 
 ## Testing
 
@@ -151,7 +149,7 @@ For `mr_pairs_backtest` the return crosses zero around 44 bps of slippage, so th
 pytest -q
 ```
 
-37 tests covering the engine fill logic, portfolio P&L and partial closes, relationship estimators and screeners, pair selection, and config validation.
+40 tests covering engine fill logic, portfolio P&L and partial closes, relationship estimators and screeners, pair selection, and config validation.
 
 ## Limitations
 
