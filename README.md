@@ -1,6 +1,6 @@
 # Crypto Trader
 
-An event-driven backtesting engine for cryptocurrency strategies, with walk-forward validation and cointegration-based pairs trading. The design goal is to avoid the usual ways a backtest overstates itself: lookahead, in-sample fitting, and pair-selection bias.
+An event-driven backtesting engine for cryptocurrency strategies, with walk-forward validation and cointegration-based pairs trading.
 
 ## Features
 
