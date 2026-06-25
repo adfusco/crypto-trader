@@ -30,7 +30,7 @@ ccxt OHLCV  =>  prepare + merge + features  =>  Backtester loop  =>  Metrics / p
 
 The `Backtester` drives the loop bar by bar. The `Strategy` produces a signal from current state, the `Executor` and `Simulator` turn it into a filled order on the next bar, and the `Portfolio` tracks positions, realized and unrealized P&L, fees, and the equity curve that `Metrics` scores.
 
-Directory map:
+Directory Structure:
 
 | Directory | Role |
 |---|---|
@@ -45,11 +45,11 @@ Directory map:
 
 ## Methodology
 
-**No lookahead** A signal computed from bar `i` fills on bar `i+1` open via a pending-orders queue, never on the close that produced it.
+**Lookahead Bias:** A signal computed from bar `i` fills on bar `i+1` open via a pending-orders queue, never on the close that produced it.
 
-**Fold-local fitting** In walk-forward, the hedge ratio is re-estimated on each fold's train window, so beta never sees the data it is evaluated on. The grid search over trading-rule parameters is scored on train only.
+**Fold-local Fitting:** In walk-forward, the hedge ratio is re-estimated on each fold's train window, so beta never sees the data it is evaluated on. The grid search over trading-rule parameters is scored on train only.
 
-**Selection bias handled, not hidden** Choosing which pair to trade by full-sample cointegration leaks the test window into the choice, even if beta is refit online. The walk-forward selector screens each fold's train window and trades the top cointegrated pair, or sits the fold out if none cointegrate. The resulting out-of-sample figure is lower than a hand-picked pair would suggest.
+**Selection Bias:** Choosing which pair to trade by full-sample cointegration leaks the test window into the choice, even if beta is refit online. The walk-forward selector screens each fold's train window and trades the top cointegrated pair, or sits the fold out if none cointegrate. The resulting out-of-sample figure is lower than a hand-picked pair would suggest.
 
 ## Quickstart
 
@@ -155,7 +155,7 @@ pytest -q
 
 - Live and paper trading are not implemented
 - A single train window controls both pair selection and beta fitting (no separate cointegration lookback)
-- Primarily exercised on daily data
+- Primarily tested on daily data
 - Fees and slippage use a simple constant model, not an order-book simulation
 
 ## Installation
