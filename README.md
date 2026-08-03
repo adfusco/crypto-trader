@@ -4,7 +4,7 @@ An event-driven backtesting engine for cryptocurrency strategies, with walk-forw
 
 ## Features
 
-- Event-driven engine with next-bar fills: a signal on bar `i` fills at the bar `i+1` open, not the close that generated it
+- Event-driven engine with next-bar fills
 - Walk-forward validation with fold-local fitting: hedge ratios, pair selection, and trading-rule parameters are all fit on each fold's train window only
 - Cointegration screening (Johansen trace test with a Phillips-Perron unit-root pre-filter) to find tradeable pairs
 - Pairs mean-reversion strategy trading a hedged cointegration spread
