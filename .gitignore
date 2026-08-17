@@ -1,6 +1,7 @@
 # Byte-compiled / cache files
 __pycache__/
 *.py[cod]
+*$py.class
 
 # C extensions
 *.so
@@ -24,6 +25,9 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Virtual environments
 .venv/
@@ -31,20 +35,55 @@ venv/
 env/
 ENV/
 .env/
+env.bak/
+venv.bak/
 .python-version
+__pypackages__/
+
+# Secrets (API keys, exchange credentials)
+.env
+.env.*
+!.env.example
+.pypirc
+.streamlit/secrets.toml
 
 # PyCharm
 .idea/
 
+# VSCode
+.vscode/
+
 # Mac OS
 .DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
 
 # Logs and databases
 *.log
 *.sqlite3
+logs/
 
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# VSCode
-.vscode/
+# Testing / coverage / type checkers
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.tox/
+.nox/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+
+# Generated backtest artifacts
+metrics/portfolio_data/*.pkl
+data_ingestion/clean_data/
+
+# Local planning notes
+PLAN.md
+*_PLAN.md
