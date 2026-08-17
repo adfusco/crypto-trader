@@ -28,7 +28,7 @@ ccxt OHLCV  =>  prepare + merge + features  =>  Backtester loop  =>  Metrics / p
                                    Portfolio (positions, P&L, equity curve)
 ```
 
-The `Backtester` drives the loop bar by bar. The `Strategy` produces a signal from current state, the `Executor` and `Simulator` turn it into a filled order on the next bar, and the `Portfolio` tracks positions, realized and unrealized P&L, fees, and the equity curve that `Metrics` scores.
+The `Backtester` drives the bar by bar loop. The `Strategy` produces a signal from current state, the `Executor` and `Simulator` turn it into a filled order on the next bar, and the `Portfolio` tracks positions, realized and unrealized P&L, fees, and the equity curve that `Metrics` scores.
 
 Directory Structure:
 
@@ -40,12 +40,12 @@ Directory Structure:
 | `backtest/` | Event-driven engine, executor, simulator, portfolio, walk-forward |
 | `asset_analysis/` | Cointegration / correlation screening and hedge-ratio estimation |
 | `metrics/` | Performance metrics and plotting |
-| `configs/` | One config per strategy-mode combination |
+| `configs/` | One config per strategy mode combination |
 | `tests/` | Unit tests for engine, portfolio, relationships, config |
 
 ## Methodology
 
-**Lookahead Bias:** A signal computed from bar `i` fills on bar `i+1` open via a pending-orders queue, never on the close that produced it.
+**Lookahead Bias:** A signal computed from bar `i` fills on bar `i+1` open via a pending-orders queue, so it isn't generated from the same bar.
 
 **Fold-local Fitting:** In walk-forward, the hedge ratio is re-estimated on each fold's train window, so beta never sees the data it is evaluated on. The grid search over trading-rule parameters is scored on train only.
 
