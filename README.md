@@ -1,22 +1,20 @@
 # Crypto Trader
 
-An event-driven backtesting engine for cryptocurrency strategies, with walk-forward validation and cointegration-based pairs trading.
+An event-driven backtesting engine for cryptocurrency strategies, with walk-forward validation, transaction costs, and slippage.
 
 ## Features
 
-- Event-driven engine with next-bar fills
-- Walk-forward validation with fold-local fitting: hedge ratios, pair selection, and trading-rule parameters are all fit on each fold's train window only
-- Cointegration screening (Johansen trace test with a Phillips-Perron unit-root pre-filter) to find tradeable pairs
+- Event driven engine with next-bar fills
+- Walk-forward validation with fold-local fitting
+- Cointegration screening
 - Pairs mean-reversion strategy trading a hedged cointegration spread
 - Fixed-fractional position sizing, slippage, and fee modeling
 - Transaction-cost sensitivity sweep that finds the break-even slippage or fee level for a strategy
 - Pluggable strategies, objectives, and relationship methods, selected by name from registries
 - Equity-vs-benchmark, drawdown, and trade-marker visualization
-- Config-driven CLI: one command runs a backtest or a full walk-forward and prints summary stats
+- Config-driven CLI: commands to run a backtest or a full walk-forward with printed summary stats
 
 ## Architecture
-
-Data flows from ingestion to a decision loop to performance metrics:
 
 ```
 ccxt OHLCV  =>  prepare + merge + features  =>  Backtester loop  =>  Metrics / plots
@@ -28,7 +26,7 @@ ccxt OHLCV  =>  prepare + merge + features  =>  Backtester loop  =>  Metrics / p
                                    Portfolio (positions, P&L, equity curve)
 ```
 
-The `Backtester` drives the bar by bar loop. The `Strategy` produces a signal from current state, the `Executor` and `Simulator` turn it into a filled order on the next bar, and the `Portfolio` tracks positions, realized and unrealized P&L, fees, and the equity curve that `Metrics` scores.
+The `Backtester` is what drives the bar by bar loop. The `Strategy` produces a signal from current state, the `Executor` and `Simulator` turn it into a filled order on the next bar, and the `Portfolio` tracks positions, realized and unrealized P&L, fees, and the equity curve that `Metrics` uses.
 
 Directory Structure:
 
@@ -43,15 +41,7 @@ Directory Structure:
 | `configs/` | One config per strategy mode combination |
 | `tests/` | Unit tests for engine, portfolio, relationships, config |
 
-## Methodology
-
-**Lookahead Bias:** A signal computed from bar `i` fills on bar `i+1` open via a pending-orders queue, so it isn't generated from the same bar.
-
-**Fold-local Fitting:** In walk-forward, the hedge ratio is re-estimated on each fold's train window, so beta never sees the data it is evaluated on. The grid search over trading-rule parameters is scored on train only.
-
-**Selection Bias:** Choosing which pair to trade by full-sample cointegration leaks the test window into the choice, even if beta is refit online. The walk-forward selector screens each fold's train window and trades the top cointegrated pair, or sits the fold out if none cointegrate. The resulting out-of-sample figure is lower than a hand-picked pair would suggest.
-
-## Quickstart
+## How to
 
 ```bash
 pip install -r requirements.txt
@@ -63,11 +53,11 @@ python -m backtest mr_pairs_backtest --plot
 python -m backtest mr_pairs_select_walkforward
 ```
 
-Data is read from cached CSVs by default. Add `--fetch` to re-download from the exchange first.
+Data is read from cached CSVs by default. You can add `--fetch` to re-download from the exchange first.
 
 ## Example result
 
-Walk-forward over a six-symbol universe (DOT, XTZ, LINK, ADA, ATOM, LTC), 2021-2025 out-of-sample, with the traded pair selected blind on each fold's train window:
+Below is the result from a walk-forward test over six symbols (DOT, XTZ, LINK, ADA, ATOM, LTC), where 2021-2025 is out-of-sample:
 
 ```bash
 python -m backtest mr_pairs_select_walkforward
@@ -81,7 +71,7 @@ python -m backtest mr_pairs_select_walkforward
 | Profit factor | 1.23 | 1.29 |
 | Trades | 86 | 106 |
 
-The selector trades a different pair on most folds and sits out 2 of 17 when nothing cointegrates. The gap between the two columns is the selection bias an in-sample pair choice would have hidden.
+Notice that the selector trades a different pair on most folds, and sits out 2 of 17 when nothing cointegrates. The gap between the two columns is the selection bias an in-sample pair choice would have hidden.
 
 ![Walk-forward equity vs buy-and-hold](docs/images/walkforward_equity.png)
 
@@ -105,9 +95,9 @@ config = {
 }
 ```
 
-Plumbing paths (merged data, logs, saved results) derive from the config name, so two configs never overwrite each other and results are reproducible from config plus code plus data.
-
 ## Strategies and relationships
+
+Here are some sample strategies included:
 
 | Strategy | Description |
 |---|---|
@@ -123,17 +113,17 @@ Plumbing paths (merged data, logs, saved results) derive from the config name, s
 
 ## Screening workflow
 
-Rank the candidate pairs in a universe before committing one to a config:
+Rank the candidate pairs in a universe before adding one to a config:
 
 ```bash
 python -m asset_analysis DOT/USDT XTZ/USDT LINK/USDT ADA/USDT --start 2020-09-01 --top 10
 ```
 
-This prints every testable pair ranked by trace statistic, with a `cointegrated` flag and the estimated hedge ratio, so near-misses are visible. Add `--fetch` to pull data first, `--method correlation` to switch the screen, or `--save out.csv` to write the full table.
+This prints every testable pair ranked by trace statistic, with a `cointegrated` flag and the estimated hedge ratio. Add `--fetch` to pull data first, `--method correlation` to switch the screen, or `--save out.csv` to write the full table.
 
 ## Transaction cost sensitivity
 
-Re-run any config across a range of slippage or fee levels to see how far the edge survives rising costs:
+Rerun any config across a range of slippage or fee levels to see how far the edge lasts against rising transaction costs:
 
 ```bash
 python -m backtest.cost_sweep mr_pairs_backtest --param slippage_bps --plot
@@ -141,7 +131,7 @@ python -m backtest.cost_sweep mr_pairs_backtest --param slippage_bps --plot
 
 ![Total return vs slippage](docs/images/cost_sweep.png)
 
-For `mr_pairs_backtest` the return crosses zero around 44 bps of slippage, so the edge is thin and cost-sensitive. Swap `--param fee_rate` to sweep fees, or `--metric sharpe_ratio` to plot a different axis. The sweep reuses the main CLI's run path, so it works for any strategy or mode unchanged.
+For `mr_pairs_backtest` the return crosses zero around 44 bps of slippage, so the edge is relatively thin and cost-sensitive. Swap `--param fee_rate` to sweep fees, or `--metric sharpe_ratio` to plot a different axis. The sweep reuses the main CLI's run path, so it works for any strategy or mode unchanged.
 
 ## Testing
 
@@ -149,14 +139,14 @@ For `mr_pairs_backtest` the return crosses zero around 44 bps of slippage, so th
 pytest -q
 ```
 
-40 tests covering engine fill logic, portfolio P&L and partial closes, relationship estimators and screeners, pair selection, and config validation.
+Included are 40 tests covering engine fill logic, portfolio P&L and partial closes, relationship estimators and screeners, pair selection, and config validation.
 
 ## Limitations
 
 - Live and paper trading are not implemented
-- A single train window controls both pair selection and beta fitting (no separate cointegration lookback)
+- A single train window controls both pair selection and beta fitting (there is no separate cointegration lookback)
 - Primarily tested on daily data
-- Fees and slippage use a simple constant model, not an order-book simulation
+- Fees and slippage use a simple constant model
 
 ## Installation
 
