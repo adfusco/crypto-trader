@@ -41,20 +41,6 @@ Directory Structure:
 | `configs/` | One config per strategy mode combination |
 | `tests/` | Unit tests for engine, portfolio, relationships, config |
 
-## How to
-
-```bash
-pip install -r requirements.txt
-
-# single backtest, with chart
-python -m backtest mr_pairs_backtest --plot
-
-# full walk-forward with per-fold pair selection
-python -m backtest mr_pairs_select_walkforward
-```
-
-Data is read from cached CSVs by default. You can add `--fetch` to re-download from the exchange first.
-
 ## Example result
 
 Below is the result from a walk-forward test over six symbols (DOT, XTZ, LINK, ADA, ATOM, LTC), where 2021-2025 is out-of-sample:
@@ -76,6 +62,20 @@ Notice that the selector trades a different pair on most folds, and sits out 2 o
 ![Walk-forward equity vs buy-and-hold](docs/images/walkforward_equity.png)
 
 The strategy (blue) stays roughly flat and market-neutral while the buy-and-hold basket (gray) falls from 120k to 30k through the 2022 bear market.
+
+## How to
+
+```bash
+pip install -r requirements.txt
+
+# single backtest, with chart
+python -m backtest mr_pairs_backtest --plot
+
+# full walk-forward with per-fold pair selection
+python -m backtest mr_pairs_select_walkforward
+```
+
+Data is read from cached CSVs by default. You can add `--fetch` to re-download from the exchange first.
 
 ## Configuration
 
